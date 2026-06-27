@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>স্টক ট্র্যাকার</title>
+<meta name="theme-color" content="#1F3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="স্টক ট্র্যাকার">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjMyIiBmaWxsPSIjMUYzODY0Ii8+PHRleHQgeD0iOTYiIHk9IjEyMCIgZm9udC1zaXplPSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPvCfkqY8L3RleHQ+PC9zdmc+">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --navy:   #1F3864;
+    --blue:   #2E75B6;
+    --green:  #375623;
+    --lgreen: #E2EFDA;
+    --orange: #833C00;
+    --lorange:#FCE4D6;
+    --red:    #990000;
+    --lred:   #F4CCCC;
+    --teal:   #1A6B72;
+    --lteal:  #DEEAF1;
+    --gold:   #7F6000;
+    --lgold:  #FFF2CC;
+    --bg:     #F0F4F8;
+    --card:   #FFFFFF;
+    --border: #CBD5E1;
+    --text:   #1E293B;
+    --muted:  #64748B;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(31,56,100,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* NAV */
+  .nav { background: var(--navy); color: #fff; padding: 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .nav-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+  .nav-title { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
+  .nav-subtitle { font-size: 10px; opacity: 0.7; margin-top: 1px; }
+  .nav-tabs { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid rgba(255,255,255,0.1); }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { flex: none; padding: 10px 16px; font-size: 12px; color: rgba(255,255,255,0.65); border: none; background: none; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: #fff; border-bottom-color: #60A5FA; font-weight: 600; }
+
+  /* PAGE */
+  .page { display: none; padding: 16px; max-width: 480px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARD */
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .card-title .icon { font-size: 16px; }
+
+  /* FORM */
+  label { font-size: 12px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 4px; margin-top: 10px; }
+  label:first-child { margin-top: 0; }
+  input, select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text); background: #F8FAFC; transition: border 0.2s; }
+  input:focus, select:focus { outline: none; border-color: var(--blue); background: #fff; }
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 10px; }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:active { background: var(--blue); }
+  .btn-green  { background: var(--green); color: #fff; }
+  .btn-red    { background: var(--red); color: #fff; }
+  .btn-gold   { background: var(--gold); color: #fff; }
+  .btn-outline { background: transparent; color: var(--navy); border: 2px solid var(--navy); }
+  .btn-sm { padding: 7px 12px; font-size: 12px; width: auto; margin-top: 0; }
+
+  /* DATE ROW */
+  .date-row { display: flex; gap: 8px; }
+  .date-row > * { flex: 1; }
+
+  /* SKU ENTRY */
+  .sku-entry { border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #F8FAFC; }
+  .sku-name { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .sku-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sku-field label { font-size: 11px; margin-top: 0; margin-bottom: 3px; }
+  .sku-field input { padding: 8px 10px; font-size: 13px; }
+  .auto-val { background: var(--lteal); border-color: var(--teal); color: var(--teal); font-weight: 700; }
+
+  /* SUMMARY TABLE */
+  .sum-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sum-table th { background: var(--navy); color: #fff; padding: 8px 6px; text-align: center; font-size: 11px; }
+  .sum-table td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--border); }
+  .sum-table td:first-child { text-align: left; font-weight: 600; color: var(--navy); }
+  .sum-table tr:nth-child(even) td { background: #F8FAFC; }
+  .sum-table .total-row td { background: var(--navy); color: #fff; font-weight: 700; }
+  .sum-table .lift { color: var(--green); }
+  .sum-table .sale { color: var(--orange); }
+  .sum-table .dmg  { color: var(--red); }
+
+  /* STAT CARDS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: var(--card); border-radius: 10px; padding: 14px 12px; box-shadow: var(--shadow); border-left: 4px solid; }
+  .stat-card.green  { border-color: var(--green); }
+  .stat-card.orange { border-color: var(--orange); }
+  .stat-card.red    { border-color: var(--red); }
+  .stat-card.teal   { border-color: var(--teal); }
+  .stat-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-val   { font-size: 18px; font-weight: 800; color: var(--navy); margin-top: 3px; }
+  .stat-sub   { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  /* BADGE */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .badge-green  { background: var(--lgreen);  color: var(--green); }
+  .badge-orange { background: var(--lorange); color: var(--orange); }
+  .badge-red    { background: var(--lred);    color: var(--red); }
+  .badge-gold   { background: var(--lgold);   color: var(--gold); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 10px 20px; border-radius: 24px; font-size: 13px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* YTD */
+  .ytd-month { background: var(--card); border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; }
+  .ytd-month-hdr { background: var(--blue); color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .ytd-month-body { padding: 12px; display: none; }
+  .ytd-month-body.open { display: block; }
+  .ytd-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .ytd-row:last-child { border-bottom: none; }
+  .ytd-sku { font-weight: 600; color: var(--navy); }
+  .ytd-tgt input { width: 90px; padding: 4px 8px; font-size: 12px; border: 1.5px solid var(--border); border-radius: 6px; text-align: right; }
+  .ach-bar { height: 4px; border-radius: 2px; background: var(--border); margin-top: 3px; overflow: hidden; }
+  .ach-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+
+  /* SECTION HEADER */
+  .section-hdr { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; margin-top: 4px; }
+
+  /* PDF RANGE */
+  .range-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 32px 16px; color: var(--muted); }
+  .empty .big { font-size: 40px; margin-bottom: 8px; }
+  .empty p { font-size: 13px; line-height: 1.5; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--lgold); color: var(--gold); cursor: pointer; border: none; }
+  .chip.active { background: var(--navy); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-top">
+    <div>
+      <div class="nav-title">📦 স্টক ট্র্যাকার</div>
+      <div class="nav-subtitle" id="nav-fy">FY 2026-27</div>
+    </div>
+    <div style="font-size:11px;opacity:0.7;text-align:right;" id="nav-date"></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showPage('entry')">📝 এন্ট্রি</button>
+    <button class="tab-btn" onclick="showPage('summary')">📊 সারসংক্ষেপ</button>
+    <button class="tab-btn" onclick="showPage('ytd')">📈 YTD</button>
+    <button class="tab-btn" onclick="showPage('report')">📄 রিপোর্ট</button>
+    <button class="tab-btn" onclick="showPage('settings')">⚙️ সেটআপ</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ ENTRY PAGE -->
+<div class="page active" id="page-entry">
+  <div class="card">
+    <div class="card-title"><span class="icon">📅</span> তারিখ ও Opening Stock</div>
+    <div class="date-row">
+      <div>
+        <label>মাস</label>
+        <select id="entry-month" onchange="onDateChange()"></select>
+      </div>
+      <div>
+        <label>তারিখ</label>
+        <select id="entry-day" onchange="onDateChange()"></select>
+      </div>
+    </div>
+    <div id="opening-section" style="display:none; margin-top:12px;">
+      <div class="divider"></div>
+      <div class="section-hdr">Opening Stock (মাসের শুরুতে একবার)</div>
+      <div id="opening-inputs"></div>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="saveOpening()">Opening সেভ করুন</button>
+    </div>
+  </div>
+
+  <div id="sku-entries"></div>
+
+  <button class="btn btn-primary" onclick="saveEntry()">✅ সেভ করুন</button>
+</div>
+
+<!-- ═══════════════════════════════════════ SUMMARY PAGE -->
+<div class="page" id="page-summary">
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> মাসিক সারসংক্ষেপ</div>
+    <label>মাস সিলেক্ট করুন</label>
+    <select id="sum-month" onchange="renderSummary()"></select>
+  </div>
+  <div id="stats-area"></div>
+  <div id="summary-table-area"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ YTD PAGE -->
+<div class="page" id="page-ytd">
+  <div class="card">
+    <div class="card-title"><span class="icon">📈</span> YTD রিপোর্ট – <span id="ytd-fy-label">FY 2026-27</span></div>
+    <p style="font-size:12px;color:var(--muted);">প্রতিটি মাসের Target Value লিখুন — Qty ও Achievement অটো হিসাব হবে।</p>
+  </div>
+  <div id="ytd-area"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ REPORT PAGE -->
+<div class="page" id="page-report">
+  <div class="card">
+    <div class="card-title"><span class="icon">📄</span> PDF রিপোর্ট</div>
+    <div class="range-picker">
+      <div>
+        <label>শুরুর তারিখ</label>
+        <input type="date" id="rpt-from">
+      </div>
+      <div>
+        <label>শেষের তারিখ</label>
+        <input type="date" id="rpt-to">
+      </div>
+    </div>
+    <div class="section-hdr" style="margin-top:14px;">রিপোর্ট টাইপ</div>
+    <div class="chip-row">
+      <button class="chip active" data-rpt="sales">সেলস</button>
+      <button class="chip active" data-rpt="lifting">লিফটিং</button>
+      <button class="chip active" data-rpt="damage">ড্যামেজ</button>
+      <button class="chip active" data-rpt="stock">ক্লোজিং স্টক</button>
+    </div>
+    <button class="btn btn-red" style="margin-top:14px;" onclick="generatePDF()">📥 PDF ডাউনলোড</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">⚡</span> দ্রুত রিপোর্ট</div>
+    <button class="btn btn-outline" style="margin-bottom:8px;" onclick="quickReport('today')">📅 আজকের রিপোর্ট</button>
+    <button class="btn btn-outline" style="margin-bottom:8px;" onclick="quickReport('week')">📆 এই সপ্তাহের রিপোর্ট</button>
+    <button class="btn btn-outline" style="margin-bottom:8px;" onclick="quickReport('month')">🗓️ এই মাসের রিপোর্ট</button>
+    <button class="btn btn-outline" onclick="quickReport('ytd')">📈 YTD রিপোর্ট</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SETTINGS PAGE -->
+<div class="page" id="page-settings">
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span> FY সেটআপ</div>
+    <label>Fiscal Year শুরু</label>
+    <select id="fy-start-month"></select>
+    <label>বছর</label>
+    <input type="number" id="fy-start-year" value="2026">
+    <button class="btn btn-primary" onclick="saveFY()">FY সেভ করুন</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">💰</span> Price List</div>
+    <div id="price-list-inputs"></div>
+    <button class="btn btn-green" onclick="savePrices()">প্রাইস সেভ করুন</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🗑️</span> ডেটা ম্যানেজমেন্ট</div>
+    <button class="btn btn-red" onclick="clearAllData()">সব ডেটা মুছুন</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Install Banner -->
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1F3864;color:#fff;padding:12px 16px;z-index:1000;align-items:center;gap:10px;box-shadow:0 -2px 12px rgba(0,0,0,0.3);">
+  <span style="font-size:22px;">📦</span>
+  <div style="flex:1;">
+    <div style="font-size:13px;font-weight:700;">হোম স্ক্রিনে যোগ করুন</div>
+    <div style="font-size:11px;opacity:0.75;">অ্যাপের মতো ব্যবহার করুন, অফলাইনেও!</div>
+  </div>
+  <button onclick="triggerInstall()" style="background:#60A5FA;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">ইনস্টল</button>
+  <button onclick="closeBanner()" style="background:transparent;color:#fff;border:none;font-size:18px;cursor:pointer;padding:4px;">✕</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA & CONFIG
+// ═══════════════════════════════════════════════════════════
+const DEFAULT_SKUS = [
+  {name:"UHT500", lp:51.20, sp:54},
+  {name:"UHT200", lp:24.65, sp:26},
+  {name:"CM200",  lp:28.25, sp:30},
+  {name:"CM125",  lp:20.25, sp:21.5},
+  {name:"ST200",  lp:28.25, sp:30},
+  {name:"ST125",  lp:20.25, sp:21.5},
+  {name:"MG200",  lp:28.25, sp:30},
+  {name:"MG125",  lp:20.25, sp:21.5},
+  {name:"MC200",  lp:34.30, sp:37},
+  {name:"VA200",  lp:28.25, sp:30},
+  {name:"G1KG",   lp:1500,  sp:1580},
+  {name:"G450",   lp:702.50,sp:742},
+  {name:"G200",   lp:322,   sp:340},
+  {name:"G100",   lp:165.5, sp:175},
+  {name:"F500",   lp:374.8, sp:390},
+  {name:"F400",   lp:322,   sp:335},
+  {name:"F200",   lp:166.1, sp:172.5},
+  {name:"F75",    lp:62,    sp:64.5},
+  {name:"F50",    lp:41.85, sp:43.5},
+  {name:"F25",    lp:19.39, sp:20},
+];
+
+const MONTH_BN = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন",
+                   "জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+const MONTH_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function load(key, def) { try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; } }
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+function getSkus()   { return load('skus', DEFAULT_SKUS); }
+function getFY()     { return load('fy', {startMonth:7, startYear:2026}); }
+function getPrices() { return getSkus(); }
+
+// entry key: "2026-07-01"
+function dateKey(y,m,d) { return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function getEntry(dk)   { return load(`entry_${dk}`, null); }
+function saveEntryData(dk, data) { save(`entry_${dk}`, data); }
+function getOpening(y,m){ return load(`opening_${y}_${m}`, {}); }
+function saveOpeningData(y,m,data){ save(`opening_${y}_${m}`, data); }
+function getYTDTargets() { return load('ytd_targets', {}); }
+function saveYTDTargets(d){ save('ytd_targets', d); }
+
+// ─── FY months list ─────────────────────────────────────
+function getFYMonths() {
+  const fy = getFY();
+  const months = [];
+  let m = fy.startMonth, y = fy.startYear;
+  for (let i=0; i<12; i++) {
+    months.push({year:y, month:m});
+    m++; if (m>12) { m=1; y++; }
+  }
+  return months;
+}
+
+function daysInMonth(y,m) { return new Date(y, m, 0).getDate(); }
+function fmt(n) { return Number(n||0).toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtI(n){ return Number(n||0).toLocaleString('en-BD'); }
+
+// ═══════════════════════════════════════════════════════════
+//  NAV & INIT
+// ═══════════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if (id==='summary') renderSummary();
+  if (id==='ytd')     renderYTD();
+  if (id==='settings') renderSettings();
+}
+
+function updateNavDate() {
+  const now = new Date();
+  document.getElementById('nav-date').textContent =
+    `${now.getDate()} ${MONTH_EN[now.getMonth()]} ${now.getFullYear()}`;
+  const fy = getFY();
+  const endYear = fy.startMonth===1 ? fy.startYear : fy.startYear+1;
+  document.getElementById('nav-fy').textContent = `FY ${fy.startYear}-${String(endYear).slice(2)}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ENTRY PAGE
+// ═══════════════════════════════════════════════════════════
+function initEntry() {
+  const months = getFYMonths();
+  const sel = document.getElementById('entry-month');
+  sel.innerHTML = months.map(({year,month},i) =>
+    `<option value="${i}">${MONTH_BN[month-1]} ${year}</option>`).join('');
+
+  // default to current month
+  const now = new Date();
+  const idx = months.findIndex(m=>m.month===now.getMonth()+1 && m.year===now.getFullYear());
+  if (idx>=0) sel.value = idx;
+
+  populateDays();
+  onDateChange();
+}
+
+function populateDays() {
+  const months = getFYMonths();
+  const mi = parseInt(document.getElementById('entry-month').value);
+  const {year,month} = months[mi];
+  const n = daysInMonth(year,month);
+  const now = new Date();
+  const sel = document.getElementById('entry-day');
+  sel.innerHTML = Array.from({length:n},(_,i)=>{
+    const d = new Date(year,month-1,i+1);
+    const days=['রবি','সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি'];
+    return `<option value="${i+1}">${i+1} (${days[d.getDay()]})</option>`;
+  }).join('');
+  if (month===now.getMonth()+1 && year===now.getFullYear()) sel.value = now.getDate();
+}
+
+function onDateChange() {
+  populateDays();
+  const months = getFYMonths();
+  const mi = parseInt(document.getElementById('entry-month').value);
+  const {year,month} = months[mi];
+  const day = parseInt(document.getElementById('entry-day').value);
+  const dk = dateKey(year,month,day);
+  const skus = getSkus();
+  const opening = getOpening(year,month);
+  const existing = getEntry(dk) || {};
+
+  // Show opening section only for day 1
+  const openSec = document.getElementById('opening-section');
+  if (day===1) {
+    openSec.style.display='block';
+    const oi = document.getElementById('opening-inputs');
+    oi.innerHTML = skus.map(s=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;font-weight:700;color:var(--navy);width:70px;">${s.name}</span>
+        <input type="number" id="op_${s.name}" value="${opening[s.name]||0}"
+          style="width:120px;padding:6px 10px;font-size:13px;border:1.5px solid var(--border);border-radius:6px;background:var(--lgold);">
+      </div>`).join('');
+  } else { openSec.style.display='none'; }
+
+  // SKU entries
+  const container = document.getElementById('sku-entries');
+  container.innerHTML = skus.map(s => {
+    const e = existing[s.name] || {lq:0,sq:0,dq:0};
+    // compute current stock
+    const openQty = opening[s.name] || 0;
+    // get previous day closing
+    let prevStock = openQty;
+    if (day>1) {
+      const pdk = dateKey(year,month,day-1);
+      const pe = getEntry(pdk);
+      if (pe && pe[s.name]) prevStock = pe[s.name].cs || openQty;
+    }
+    return `
+    <div class="sku-entry">
+      <div class="sku-name">${s.name}
+        <span class="badge badge-gold" style="margin-left:6px;">LP: ৳${s.lp}</span>
+        <span class="badge badge-orange" style="margin-left:4px;">SP: ৳${s.sp}</span>
+      </div>
+      <div class="sku-grid">
+        <div class="sku-field">
+          <label style="color:var(--green);">🟢 Lifting Qty</label>
+          <input type="number" id="lq_${s.name}" value="${e.lq||0}" oninput="calcSku('${s.name}',${day},${prevStock},${s.lp},${s.sp})">
+        </div>
+        <div class="sku-field">
+          <label style="color:var(--green);">Lifting Value</label>
+          <input class="auto-val" readonly id="lv_${s.name}" value="৳${fmt(e.lv||0)}">
+        </div>
+        <div class="sku-field">
+          <label style="color:var(--orange);">🟠 Sales Qty</label>
+          <input type="number" id="sq_${s.name}" value="${e.sq||0}" oninput="calcSku('${s.name}',${day},${prevStock},${s.lp},${s.sp})">
+        </div>
+        <div class="sku-field">
+          <label style="color:var(--orange);">Sales Value</label>
+          <input class="auto-val" readonly id="sv_${s.name}" value="৳${fmt(e.sv||0)}">
+        </div>
+        <div class="sku-field">
+          <label style="color:var(--red);">🔴 Damage Qty</label>
+          <input type="number" id="dq_${s.name}" value="${e.dq||0}" oninput="calcSku('${s.name}',${day},${prevStock},${s.lp},${s.sp})">
+        </div>
+        <div class="sku-field">
+          <label style="color:var(--red);">Damage Value</label>
+          <input class="auto-val" readonly id="dv_${s.name}" value="৳${fmt(e.dv||0)}">
+        </div>
+        <div class="sku-field">
+          <label style="color:var(--teal);">🔵 Current Stock</label>
+          <input class="auto-val" readonly id="cs_${s.name}" value="${fmtI(e.cs!==undefined?e.cs:prevStock)}">
+        </div>
+        <div class="sku-field">
+          <label style="color:var(--teal);">Stock Value</label>
+          <input class="auto-val" readonly id="stv_${s.name}" value="৳${fmt(e.stv||prevStock*s.lp)}">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // recalc all
+  skus.forEach(s=>{
+    const opening2 = getOpening(year,month);
+    let ps = opening2[s.name]||0;
+    if (day>1) {
+      const pdk=dateKey(year,month,day-1);
+      const pe=getEntry(pdk);
+      if (pe&&pe[s.name]) ps=pe[s.name].cs||ps;
+    }
+    calcSku(s.name,day,ps,s.lp,s.sp);
+  });
+}
+
+function calcSku(name, day, prevStock, lp, sp) {
+  const lq = parseFloat(document.getElementById(`lq_${name}`)?.value)||0;
+  const sq = parseFloat(document.getElementById(`sq_${name}`)?.value)||0;
+  const dq = parseFloat(document.getElementById(`dq_${name}`)?.value)||0;
+  const lv = lq*lp, sv = sq*sp, dv = dq*lp;
+  const cs = prevStock + lq - sq - dq;
+  const stv = cs*lp;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+  set(`lv_${name}`, `৳${fmt(lv)}`);
+  set(`sv_${name}`, `৳${fmt(sv)}`);
+  set(`dv_${name}`, `৳${fmt(dv)}`);
+  set(`cs_${name}`, fmtI(cs));
+  set(`stv_${name}`,`৳${fmt(stv)}`);
+}
+
+function saveOpening() {
+  const months = getFYMonths();
+  const mi = parseInt(document.getElementById('entry-month').value);
+  const {year,month} = months[mi];
+  const skus = getSkus();
+  const data = {};
+  skus.forEach(s=>{
+    data[s.name] = parseFloat(document.getElementById(`op_${s.name}`)?.value)||0;
+  });
+  saveOpeningData(year,month,data);
+  showToast('Opening Stock সেভ হয়েছে ✅');
+  onDateChange();
+}
+
+function saveEntry() {
+  const months = getFYMonths();
+  const mi = parseInt(document.getElementById('entry-month').value);
+  const {year,month} = months[mi];
+  const day = parseInt(document.getElementById('entry-day').value);
+  const dk = dateKey(year,month,day);
+  const skus = getSkus();
+  const opening = getOpening(year,month);
+  const data = {};
+  skus.forEach(s=>{
+    let ps = opening[s.name]||0;
+    if (day>1) {
+      const pdk=dateKey(year,month,day-1);
+      const pe=getEntry(pdk);
+      if (pe&&pe[s.name]) ps=pe[s.name].cs||ps;
+    }
+    const lq=parseFloat(document.getElementById(`lq_${s.name}`)?.value)||0;
+    const sq=parseFloat(document.getElementById(`sq_${s.name}`)?.value)||0;
+    const dq=parseFloat(document.getElementById(`dq_${s.name}`)?.value)||0;
+    data[s.name]={lq,lv:lq*s.lp,sq,sv:sq*s.sp,dq,dv:dq*s.lp,cs:ps+lq-sq-dq,stv:(ps+lq-sq-dq)*s.lp};
+  });
+  saveEntryData(dk, data);
+  showToast('ডেটা সেভ হয়েছে ✅');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SUMMARY PAGE
+// ═══════════════════════════════════════════════════════════
+function initSummaryMonths() {
+  const months = getFYMonths();
+  const sel = document.getElementById('sum-month');
+  sel.innerHTML = months.map(({year,month},i)=>
+    `<option value="${i}">${MONTH_BN[month-1]} ${year}</option>`).join('');
+  const now=new Date();
+  const idx=months.findIndex(m=>m.month===now.getMonth()+1&&m.year===now.getFullYear());
+  if(idx>=0) sel.value=idx;
+}
+
+function renderSummary() {
+  const months=getFYMonths();
+  const mi=parseInt(document.getElementById('sum-month').value);
+  const {year,month}=months[mi];
+  const skus=getSkus();
+  const n=daysInMonth(year,month);
+  const opening=getOpening(year,month);
+
+  const totals={};
+  skus.forEach(s=>totals[s.name]={lq:0,lv:0,sq:0,sv:0,dq:0,dv:0,cs:0,stv:0});
+
+  for(let d=1;d<=n;d++){
+    const dk=dateKey(year,month,d);
+    const e=getEntry(dk);
+    if(!e) continue;
+    skus.forEach(s=>{
+      if(!e[s.name]) return;
+      totals[s.name].lq+=e[s.name].lq||0;
+      totals[s.name].lv+=e[s.name].lv||0;
+      totals[s.name].sq+=e[s.name].sq||0;
+      totals[s.name].sv+=e[s.name].sv||0;
+      totals[s.name].dq+=e[s.name].dq||0;
+      totals[s.name].dv+=e[s.name].dv||0;
+    });
+    // last day closing
+    skus.forEach(s=>{
+      if(e[s.name]) {
+        totals[s.name].cs=e[s.name].cs||0;
+        totals[s.name].stv=e[s.name].stv||0;
+      }
+    });
+  }
+  // if no entry yet, use opening for closing stock
+  skus.forEach(s=>{
+    if(totals[s.name].cs===0) totals[s.name].cs=opening[s.name]||0;
+    if(totals[s.name].stv===0) totals[s.name].stv=(opening[s.name]||0)*s.lp;
+  });
+
+  const grandLV=skus.reduce((a,s)=>a+totals[s.name].lv,0);
+  const grandSV=skus.reduce((a,s)=>a+totals[s.name].sv,0);
+  const grandDV=skus.reduce((a,s)=>a+totals[s.name].dv,0);
+  const grandSTV=skus.reduce((a,s)=>a+totals[s.name].stv,0);
+
+  document.getElementById('stats-area').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-label">মোট লিফটিং ভ্যালু</div>
+        <div class="stat-val">৳${(grandLV/1000).toFixed(1)}K</div>
+        <div class="stat-sub">${MONTH_BN[month-1]} ${year}</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">মোট সেলস ভ্যালু</div>
+        <div class="stat-val">৳${(grandSV/1000).toFixed(1)}K</div>
+        <div class="stat-sub">${MONTH_BN[month-1]} ${year}</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">মোট ড্যামেজ ভ্যালু</div>
+        <div class="stat-val">৳${(grandDV/1000).toFixed(1)}K</div>
+        <div class="stat-sub">${MONTH_BN[month-1]} ${year}</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-label">ক্লোজিং স্টক ভ্যালু</div>
+        <div class="stat-val">৳${(grandSTV/1000).toFixed(1)}K</div>
+        <div class="stat-sub">${MONTH_BN[month-1]} ${year}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('summary-table-area').innerHTML=`
+    <div class="card" style="overflow-x:auto;padding:10px;">
+      <table class="sum-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th class="lift">Lift Qty</th>
+            <th class="lift">Lift Val</th>
+            <th class="sale">Sale Qty</th>
+            <th class="sale">Sale Val</th>
+            <th class="dmg">Dmg Qty</th>
+            <th class="dmg">Dmg Val</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${skus.map(s=>`<tr>
+            <td>${s.name}</td>
+            <td class="lift">${fmtI(totals[s.name].lq)}</td>
+            <td class="lift">৳${fmt(totals[s.name].lv)}</td>
+            <td class="sale">${fmtI(totals[s.name].sq)}</td>
+            <td class="sale">৳${fmt(totals[s.name].sv)}</td>
+            <td class="dmg">${fmtI(totals[s.name].dq)}</td>
+            <td class="dmg">৳${fmt(totals[s.name].dv)}</td>
+            <td>${fmtI(totals[s.name].cs)}</td>
+          </tr>`).join('')}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td>TOTAL</td>
+            <td>${fmtI(skus.reduce((a,s)=>a+totals[s.name].lq,0))}</td>
+            <td>৳${fmt(grandLV)}</td>
+            <td>${fmtI(skus.reduce((a,s)=>a+totals[s.name].sq,0))}</td>
+            <td>৳${fmt(grandSV)}</td>
+            <td>${fmtI(skus.reduce((a,s)=>a+totals[s.name].dq,0))}</td>
+            <td>৳${fmt(grandDV)}</td>
+            <td>${fmtI(skus.reduce((a,s)=>a+totals[s.name].cs,0))}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  YTD PAGE
+// ═══════════════════════════════════════════════════════════
+function renderYTD() {
+  const months=getFYMonths();
+  const targets=getYTDTargets();
+  const skus=getSkus();
+  const fy=getFY();
+  const endY=fy.startMonth===1?fy.startYear:fy.startYear+1;
+  document.getElementById('ytd-fy-label').textContent=`FY ${fy.startYear}-${String(endY).slice(2)}`;
+
+  document.getElementById('ytd-area').innerHTML = months.map(({year,month},mi)=>{
+    const n=daysInMonth(year,month);
+    const totSV=skus.reduce((acc,s)=>{
+      let sv=0;
+      for(let d=1;d<=n;d++){
+        const e=getEntry(dateKey(year,month,d));
+        if(e&&e[s.name]) sv+=e[s.name].sv||0;
+      }
+      return acc+sv;
+    },0);
+    const tgtTotal=skus.reduce((a,s)=>a+(parseFloat(targets[`${year}_${month}_${s.name}`])||0),0);
+    const ach=tgtTotal>0?(totSV/tgtTotal*100):0;
+    const achColor=ach>=100?'#375623':ach>=80?'#7F6000':'#990000';
+    return `
+    <div class="ytd-month">
+      <div class="ytd-month-hdr" onclick="toggleYTDMonth(this)">
+        <span>${MONTH_BN[month-1]} ${year}</span>
+        <span style="color:${achColor};font-size:12px;">${tgtTotal>0?ach.toFixed(1)+'%':'—'}</span>
+      </div>
+      <div class="ytd-month-body" id="ytd-body-${mi}">
+        ${skus.map(s=>{
+          const tgtKey=`${year}_${month}_${s.name}`;
+          const tgtVal=targets[tgtKey]||0;
+          const tgtQty=tgtVal>0?Math.round(tgtVal/s.lp):0;
+          let actSV=0, actLQ=0;
+          for(let d=1;d<=n;d++){
+            const e=getEntry(dateKey(year,month,d));
+            if(e&&e[s.name]){actSV+=e[s.name].sv||0;actLQ+=e[s.name].lq||0;}
+          }
+          const ach2=tgtVal>0?(actSV/tgtVal*100):0;
+          const fill=ach2>=100?'var(--green)':ach2>=80?'var(--gold)':'var(--red)';
+          return `<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span class="ytd-sku">${s.name}</span>
+              <span style="font-size:11px;color:var(--muted);">Actual: ৳${fmt(actSV)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Target ৳</span>
+              <input type="number" value="${tgtVal||''}" placeholder="0"
+                style="flex:1;padding:5px 8px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;"
+                onchange="saveYTDTarget('${year}','${month}','${s.name}',this.value)">
+              <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Qty: ${fmtI(tgtQty)}</span>
+            </div>
+            <div class="ach-bar" style="margin-top:5px;">
+              <div class="ach-fill" style="width:${Math.min(ach2,100)}%;background:${fill};"></div>
+            </div>
+            <div style="font-size:10px;color:${fill};text-align:right;margin-top:2px;font-weight:700;">
+              ${tgtVal>0?ach2.toFixed(1)+'%':'—'}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleYTDMonth(el) {
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function saveYTDTarget(year,month,sku,val) {
+  const targets=getYTDTargets();
+  targets[`${year}_${month}_${sku}`]=parseFloat(val)||0;
+  saveYTDTargets(targets);
+  showToast('Target সেভ হয়েছে ✅');
+  // recalc this month's header
+  renderYTD();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  REPORT / PDF
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click',function(){this.classList.toggle('active');});
+});
+
+function quickReport(type) {
+  const now=new Date();
+  const from=document.getElementById('rpt-from');
+  const to=document.getElementById('rpt-to');
+  const todayStr=now.toISOString().slice(0,10);
+  if(type==='today'){
+    from.value=todayStr;
+    to.value=todayStr;
+  } else if(type==='week'){
+    const d=new Date(now); d.setDate(now.getDate()-6);
+    from.value=d.toISOString().slice(0,10);
+    to.value=todayStr;
+  } else if(type==='month'){
+    from.value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    to.value=todayStr;
+  } else {
+    const fy=getFY(); let sy=fy.startYear,sm=fy.startMonth;
+    from.value=`${sy}-${String(sm).padStart(2,'0')}-01`;
+    to.value=todayStr;
+  }
+  generatePDF();
+}
+
+function getRptTypes() {
+  return [...document.querySelectorAll('.chip.active')].map(c=>c.dataset.rpt);
+}
+
+function getDataRange(fromStr, toStr) {
+  const skus=getSkus();
+  const from=new Date(fromStr), to=new Date(toStr);
+  const days=[];
+  for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)) days.push(new Date(d));
+
+  const totals={};
+  skus.forEach(s=>totals[s.name]={lq:0,lv:0,sq:0,sv:0,dq:0,dv:0,cs:0,stv:0});
+  let lastEntry=null;
+
+  days.forEach(dt=>{
+    const dk=dateKey(dt.getFullYear(),dt.getMonth()+1,dt.getDate());
+    const e=getEntry(dk);
+    if(!e) return;
+    lastEntry=e;
+    skus.forEach(s=>{
+      if(!e[s.name]) return;
+      totals[s.name].lq+=e[s.name].lq||0;
+      totals[s.name].lv+=e[s.name].lv||0;
+      totals[s.name].sq+=e[s.name].sq||0;
+      totals[s.name].sv+=e[s.name].sv||0;
+      totals[s.name].dq+=e[s.name].dq||0;
+      totals[s.name].dv+=e[s.name].dv||0;
+    });
+  });
+  if(lastEntry) skus.forEach(s=>{
+    if(lastEntry[s.name]){totals[s.name].cs=lastEntry[s.name].cs||0;totals[s.name].stv=lastEntry[s.name].stv||0;}
+  });
+  return totals;
+}
+
+function generatePDF() {
+  const fromStr=document.getElementById('rpt-from').value;
+  const toStr=document.getElementById('rpt-to').value;
+  if(!fromStr||!toStr){showToast('তারিখ সিলেক্ট করুন');return;}
+
+  const types=getRptTypes();
+  if(types.length===0){showToast('কমপক্ষে একটি রিপোর্ট টাইপ সিলেক্ট করুন');return;}
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const skus=getSkus();
+  const totals=getDataRange(fromStr,toStr);
+  const fy=getFY();
+
+  const fromD=new Date(fromStr), toD=new Date(toStr);
+  const fmtDate=d=>`${d.getDate()} ${MONTH_EN[d.getMonth()]} ${d.getFullYear()}`;
+  const period=`${fmtDate(fromD)} – ${fmtDate(toD)}`;
+
+  // Header
+  doc.setFillColor(31,56,100);
+  doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text('Stock Management Report',105,12,{align:'center'});
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text(`Period: ${period}`,105,20,{align:'center'});
+  doc.setFontSize(8);
+  doc.text(`FY ${fy.startYear}-${String(fy.startYear+1).slice(2)} | Generated: ${fmtDate(new Date())}`,105,26,{align:'center'});
+
+  let y=34;
+
+  if(types.includes('sales')){
+    doc.setTextColor(131,60,0); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text('Sales Report',14,y); y+=4;
+    doc.autoTable({
+      startY:y,
+      head:[['SKU','Sales Qty','Sales Value (৳)']],
+      body:[
+        ...skus.map(s=>[s.name, fmtI(totals[s.name].sq), fmt(totals[s.name].sv)]),
+        ['TOTAL',
+          fmtI(skus.reduce((a,s)=>a+totals[s.name].sq,0)),
+          fmt(skus.reduce((a,s)=>a+totals[s.name].sv,0))]
+      ],
+      headStyles:{fillColor:[131,60,0],textColor:255,fontSize:9},
+      bodyStyles:{fontSize:8},
+      footStyles:{fillColor:[31,56,100],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[252,228,214]},
+      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right'},2:{halign:'right'}},
+      didParseCell:(d)=>{ if(d.row.index===skus.length){d.cell.styles.fillColor=[31,56,100];d.cell.styles.textColor=255;d.cell.styles.fontStyle='bold';} }
+    });
+    y=doc.lastAutoTable.finalY+8;
+  }
+
+  if(types.includes('lifting')){
+    doc.setTextColor(55,86,35); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text('Lifting Report',14,y); y+=4;
+    doc.autoTable({
+      startY:y,
+      head:[['SKU','Lifting Qty','Lifting Value (৳)']],
+      body:[
+        ...skus.map(s=>[s.name,fmtI(totals[s.name].lq),fmt(totals[s.name].lv)]),
+        ['TOTAL',fmtI(skus.reduce((a,s)=>a+totals[s.name].lq,0)),fmt(skus.reduce((a,s)=>a+totals[s.name].lv,0))]
+      ],
+      headStyles:{fillColor:[55,86,35],textColor:255,fontSize:9},
+      bodyStyles:{fontSize:8},
+      alternateRowStyles:{fillColor:[226,239,218]},
+      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right'},2:{halign:'right'}},
+      didParseCell:(d)=>{ if(d.row.index===skus.length){d.cell.styles.fillColor=[31,56,100];d.cell.styles.textColor=255;d.cell.styles.fontStyle='bold';} }
+    });
+    y=doc.lastAutoTable.finalY+8;
+  }
+
+  if(types.includes('damage')){
+    if(y>240){doc.addPage();y=14;}
+    doc.setTextColor(153,0,0); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text('Damage Report',14,y); y+=4;
+    doc.autoTable({
+      startY:y,
+      head:[['SKU','Damage Qty','Damage Value (৳)']],
+      body:[
+        ...skus.map(s=>[s.name,fmtI(totals[s.name].dq),fmt(totals[s.name].dv)]),
+        ['TOTAL',fmtI(skus.reduce((a,s)=>a+totals[s.name].dq,0)),fmt(skus.reduce((a,s)=>a+totals[s.name].dv,0))]
+      ],
+      headStyles:{fillColor:[153,0,0],textColor:255,fontSize:9},
+      bodyStyles:{fontSize:8},
+      alternateRowStyles:{fillColor:[244,204,204]},
+      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right'},2:{halign:'right'}},
+      didParseCell:(d)=>{ if(d.row.index===skus.length){d.cell.styles.fillColor=[31,56,100];d.cell.styles.textColor=255;d.cell.styles.fontStyle='bold';} }
+    });
+    y=doc.lastAutoTable.finalY+8;
+  }
+
+  if(types.includes('stock')){
+    if(y>240){doc.addPage();y=14;}
+    doc.setTextColor(26,107,114); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text('Closing Stock Report',14,y); y+=4;
+    doc.autoTable({
+      startY:y,
+      head:[['SKU','Closing Stock (Qty)','Stock Value (৳)']],
+      body:[
+        ...skus.map(s=>[s.name,fmtI(totals[s.name].cs),fmt(totals[s.name].stv)]),
+        ['TOTAL',fmtI(skus.reduce((a,s)=>a+totals[s.name].cs,0)),fmt(skus.reduce((a,s)=>a+totals[s.name].stv,0))]
+      ],
+      headStyles:{fillColor:[26,107,114],textColor:255,fontSize:9},
+      bodyStyles:{fontSize:8},
+      alternateRowStyles:{fillColor:[222,234,241]},
+      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right'},2:{halign:'right'}},
+      didParseCell:(d)=>{ if(d.row.index===skus.length){d.cell.styles.fillColor=[31,56,100];d.cell.styles.textColor=255;d.cell.styles.fontStyle='bold';} }
+    });
+  }
+
+  // Footer on all pages
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFillColor(31,56,100);
+    doc.rect(0,287,210,10,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(`Stock Tracker | ${period}`,14,293);
+    doc.text(`Page ${i} of ${pages}`,196,293,{align:'right'});
+  }
+
+  const fname=`Report_${fromStr}_to_${toStr}.pdf`;
+  doc.save(fname);
+  showToast('PDF ডাউনলোড হচ্ছে... 📥');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SETTINGS PAGE
+// ═══════════════════════════════════════════════════════════
+function renderSettings() {
+  const fy=getFY();
+  const msel=document.getElementById('fy-start-month');
+  msel.innerHTML=MONTH_BN.map((m,i)=>`<option value="${i+1}" ${fy.startMonth===i+1?'selected':''}>${m}</option>`).join('');
+  document.getElementById('fy-start-year').value=fy.startYear;
+
+  const skus=getSkus();
+  document.getElementById('price-list-inputs').innerHTML=skus.map(s=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="font-size:12px;font-weight:700;color:var(--navy);width:65px;flex-shrink:0;">${s.name}</span>
+      <div style="flex:1;">
+        <input type="number" id="lp_${s.name}" value="${s.lp}" placeholder="Lift Price"
+          style="padding:6px;font-size:12px;border:1.5px solid var(--lgreen);border-radius:6px;background:var(--lgreen);width:100%;">
+      </div>
+      <div style="flex:1;">
+        <input type="number" id="sp_${s.name}" value="${s.sp}" placeholder="Sale Price"
+          style="padding:6px;font-size:12px;border:1.5px solid var(--lorange);border-radius:6px;background:var(--lorange);width:100%;">
+      </div>
+    </div>`).join('');
+}
+
+function saveFY() {
+  const m=parseInt(document.getElementById('fy-start-month').value);
+  const y=parseInt(document.getElementById('fy-start-year').value);
+  save('fy',{startMonth:m,startYear:y});
+  updateNavDate(); initEntry(); initSummaryMonths();
+  showToast('FY সেট হয়েছে ✅');
+}
+
+function savePrices() {
+  const skus=getSkus();
+  const updated=skus.map(s=>({
+    ...s,
+    lp:parseFloat(document.getElementById(`lp_${s.name}`)?.value)||s.lp,
+    sp:parseFloat(document.getElementById(`sp_${s.name}`)?.value)||s.sp,
+  }));
+  save('skus',updated);
+  showToast('প্রাইস সেভ হয়েছে ✅');
+}
+
+function clearAllData() {
+  if(!confirm('সব ডেটা মুছে যাবে। নিশ্চিত?')) return;
+  localStorage.clear();
+  showToast('সব ডেটা মুছে গেছে');
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PWA — Service Worker + Manifest Injection
+// ═══════════════════════════════════════════════════════════
+(function(){
+  // ── 1. Inject Web App Manifest dynamically ──────────────
+  const icon192 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAABiklEQVR42u3TMQ0AAAjAMJxgA0H4twAm+OhRA0sWWT3wVYiAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAMIAIGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAAcAAYAAwABgADAAGAAOAATAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMgAFEwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAGAAMAAYAA4ABwABgADAAXFrNwq6JuIwABQAAAABJRU5ErkJggg==';
+  const icon512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAG5ElEQVR42u3WMQEAAAQAQU3UEEj/CpSwueEK/PSR1QMA/BIiAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAAAYACEAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAMAAiAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAAAYACEAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAMAAiAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAAAYACEAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAMAAiAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAAAYACEAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAMAAiAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAAAYACEAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAMAAiAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAYAADAAAAABgAAMAAAgAEAAAwAAGAAAAADAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAwAACAAQAADAAAYAAAAAMAABgAAMAAAAAGAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAIABAAAMAAAYACEAwAAAAAYAADAAAIABAAAMAABgAAAAAwAAGAAAwAAAAAYAADAAAMCdBd8hZ5m/ulC6AAAAAElFTkSuQmCC';
+
+  const manifest = {
+    name: "স্টক ট্র্যাকার",
+    short_name: "StockApp",
+    description: "ডেইলি স্টক ট্র্যাকিং অ্যাপ",
+    start_url: "./",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#1F3864",
+    theme_color: "#1F3864",
+    lang: "bn",
+    dir: "ltr",
+    scope: "./",
+    icons: [
+      { src: icon192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: icon512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+    ]
+  };
+
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const manifestURL = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = manifestURL;
+  document.head.appendChild(link);
+
+  // ── 2. Register Service Worker (inline via blob) ─────────
+  const swCode = `
+    const CACHE = 'stock-tracker-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(
+        caches.open(CACHE).then(c => c.addAll(['./']))
+      );
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(caches.keys().then(keys =>
+        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      ));
+      self.clients.claim();
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        fetch(e.request).catch(() => caches.match(e.request))
+      );
+    });
+  `;
+
+  if ('serviceWorker' in navigator) {
+    const swBlob = new Blob([swCode], {type: 'application/javascript'});
+    const swURL = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL)
+      .then(() => console.log('✅ SW registered'))
+      .catch(err => console.warn('SW error:', err));
+  }
+
+  // ── 3. Show Install Banner ───────────────────────────────
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const banner = document.getElementById('install-banner');
+    if (banner) banner.style.display = 'flex';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    const banner = document.getElementById('install-banner');
+    if (banner) banner.style.display = 'none';
+    showToast('অ্যাপ ইনস্টল হয়েছে! 🎉');
+  });
+
+  window.triggerInstall = function() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(r => {
+        if (r.outcome === 'accepted') showToast('ইনস্টল হচ্ছে... ✅');
+        deferredPrompt = null;
+      });
+    }
+  };
+
+  window.closeBanner = function() {
+    const banner = document.getElementById('install-banner');
+    if (banner) banner.style.display = 'none';
+  };
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+updateNavDate();
+initEntry();
+initSummaryMonths();
+// default report dates
+const now2=new Date();
+const wk=new Date(now2); wk.setDate(now2.getDate()-6);
+document.getElementById('rpt-from').value=wk.toISOString().slice(0,10);
+document.getElementById('rpt-to').value=now2.toISOString().slice(0,10);
+// FY month select for settings
+(function(){
+  const msel=document.getElementById('fy-start-month');
+  MONTH_BN.forEach((m,i)=>{
+    const o=document.createElement('option'); o.value=i+1; o.textContent=m; msel.appendChild(o);
+  });
+  msel.value=getFY().startMonth;
+})();
+</script>
+</body>
+</html>
