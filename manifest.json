@@ -2,7 +2,7 @@
   "name": "SS Tracker",
   "short_name": "SS Tracker",
   "description": "Sales & Stock Tracker – Dairy & Food Products",
-  "start_url": "./StockTracker_App_v2.html",
+  "start_url": "./StockTracker_App_v4.html",
   "display": "standalone",
   "background_color": "#1F3864",
   "theme_color": "#1F3864",
